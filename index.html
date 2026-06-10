@@ -1,51 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-    <!-- ═══ SEO: TITLE (Google me aapki site ka naam aur kaam dikhega) ═══ -->
-    <title>TheSumitSharma.in | Web Application — TheSumitSharma</title>
-
-    <!-- ═══ SEO: CORE META (Google Rank Karne Ke Liye Sabse Zaroori) ═══ -->
-    <meta name="description" content="Web Applications" />
-    <meta name="keywords" content="TheSumitSharma,thesumitsharma.in ,sumit sharma,Web Applications,Chet-App Web Application, File transfer online, 360° viewer, Private chat web app, Sumit Dholpur, Sumit Sharma Dholpur, Sumit Chat app, online web tool" />
-    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-    <meta name="author" content="SumitSharma" />
-    <meta name="theme-color" content="#d946ef" />
-
-    <!-- ═══ SEO: CANONICAL (Aapki Website ka Main Link) ═══ -->
-    <link rel="canonical" href="http://www.TheSumitSharma.in/" />
-
-    <!-- ═══ SEO: OPEN GRAPH (WhatsApp, Facebook ya Discord par share karne par jo dikhta hai) ═══ -->
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="TheSumitSharma" />
-    <meta property="og:title" content="TheSumitSharma.in — Web•Apps" />
-    <meta property="og:description" content="Web-Application/Chat-Web-App/File-transfer-online/360°- viewer/Github-Portfolio/SumitSharma" />
-    <meta property="og:url" content="http://www.TheSumitSharma.in/" />
-    <meta property="og:image" content="http://www.thesumitsharma.in/logo.png" />
-    <meta property="og:locale" content="en_US" />
-
-    <!-- ═══ SEO: TWITTER CARD ═══ -->
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Web-Application; Web-App — TheSumitSharma" />
-    <meta name="twitter:description" content="Web-Application/Chat-Web-App/File-transfer-online/360°- viewer/Github-Portfolio/SumitSharma " />
-    <meta name="twitter:image" content="http://www.thesumitsharma.in/logo.png" />
-
-    <!-- ═══ SEO: JSON-LD SCHEMA (Google ko site ka data automatic samajhne me madad karta hai) ═══ -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "TheSumitSharma - Web-Tools",
-      "url": "http://www.TheSumitSharma.in/",
-      "description": "Web-Application/Chat-Web-App/File-transfer-online/360°- viewer/Github-Portfolio/SumitSharma+Web-Tools.",
-      "applicationCategory": "GameApplication",
-      "operatingSystem": "All",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-      "author": { "@type": "Person", "name": "SumitSharma" }
-    }
-    </script>
-    
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TheSumitSharma.in</title>
@@ -125,6 +80,41 @@
         .nav-links a:hover {
             color: #ffffff;
             text-shadow: 0 0 8px rgba(255,255,255,0.5);
+        }
+
+        /* NEW: Ad Container and Image styling */
+        .ad-container {
+            position: relative;
+            height: 40vh; /* Same size as hero section */
+            width: 100%;
+            background: url('ad1.jpg') center/cover no-repeat;
+            cursor: pointer; /* Clickable feel dene ke liye */
+            display: block; /* Initial state visible */
+        }
+        
+        /* Ad Close Button (X) */
+        .ad-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-size: 1rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .ad-close-btn:hover {
+            background: rgba(255, 0, 0, 0.8); /* Hover par red shine */
+            transform: scale(1.1);
         }
 
         /* Responsive Hero Section */
@@ -297,6 +287,17 @@
             .cube-box {
                 height: 170px;
             }
+            /* Navbar se overlap na ho isliye ad aur hero section ke liye spacing fix */
+            .ad-container {
+                margin-top: 55px; 
+            }
+        }
+        
+        /* PC platforms par navbar spacing */
+        @media (min-width: 769px) {
+            .ad-container {
+                margin-top: 68px;
+            }
         }
     </style>
 </head>
@@ -314,6 +315,10 @@
         </ul>
     </nav>
 
+    <div class="ad-container" id="adBox">
+        <div class="ad-close-btn" id="closeAdBtn">&times;</div>
+    </div>
+
     <header class="hero-section">
         <h1 class="hero-title">TheSumitSharma.in</h1>
     </header>
@@ -329,38 +334,25 @@
             <h3>Active Interfaces</h3>
             
             <div class="cube-grid">
-                <a href="https://github.com/SumitSharmaG" class="cube-box">
-                    GitHub
+                <a href="#" class="cube-box">
+                    Project 1
                     <span>Enter Hub</span>
                 </a>
 
-                <a href="https://chat-room-three-pied.vercel.app/" class="cube-box">
-                    Chat-App
-                    <span>💬 Enter Hub</span>
-                </a>
-
-                <a href="https://Asheesh.in" class="cube-box">
-                    File-Transfer
-                    <span>🔒 Enter Hub</span>
-                </a>
-
-                <a href="https://sumitsharmag.github.io/360-Viewer/" class="cube-box">
-                    360°Viewer
-                    <span>🎥 Enter Hub</span>
-                </a>
-
-                <a href="https://sumitsharmag.github.io/Tic-tac-toe_Game/" class="cube-box">
-                    Tic-Tac-Toe Gane
+                <a href="#" class="cube-box">
+                    Project 2
                     <span>Enter Hub</span>
-
                 </a>
 
-                <a href="https://sumitsharmag.github.io/Snakey-Game/" class="cube-box">
-                    Snake 1997: Classic Retro Game
+                <a href="#" class="cube-box">
+                    Project 3
                     <span>Enter Hub</span>
-
                 </a>
-                
+
+                <a href="#" class="cube-box">
+                    Project 4
+                    <span>Enter Hub</span>
+                </a>
             </div>
         </section>
 
@@ -377,13 +369,22 @@
 
 
     <script>
+        // NEW: JavaScript for closing the Ad on Click
+        const adBox = document.getElementById('adBox');
+        
+        if(adBox) {
+            adBox.addEventListener('click', function() {
+                adBox.style.display = 'none';
+            });
+        }
+
+        // --- Maze Canvas Script (Unchanged) ---
         const canvas = document.getElementById('mazeCanvas');
         const ctx = canvas.getContext('2d');
 
         let width = canvas.width = window.innerWidth;
         let height = canvas.height = window.innerHeight;
 
-        // Auto-adjust grid base for PC/Mobile
         const spacing = width < 768 ? 40 : 60; 
         const grid = [];
         const lines = [];
@@ -394,14 +395,12 @@
             initMaze();
         });
 
-        // Initialize Maze Structure (Grid Path points)
         function initMaze() {
             grid.length = 0;
             lines.length = 0;
             for (let x = 0; x < width; x += spacing) {
                 for (let y = 0; y < height; y += spacing) {
                     grid.push({ x, y });
-                    // Randomly add paths to build maze structure
                     if (Math.random() > 0.4) {
                         lines.push({ x1: x, y1: y, x2: x + spacing, y2: y });
                     }
@@ -412,32 +411,29 @@
             }
         }
 
-        // Animated Short Motion Lines (Light Signals)
         class Signal {
             constructor() {
                 this.reset();
             }
             reset() {
-                // Enter through random doors on edges or main grid junctions
                 this.vertical = Math.random() > 0.5;
                 if (this.vertical) {
                     this.x = Math.floor(Math.random() * (width / spacing)) * spacing;
-                    this.y = 0; // Enter from top door
+                    this.y = 0; 
                     this.speedX = 0;
                     this.speedY = Math.random() * 2 + 1;
                 } else {
-                    this.x = 0; // Enter from left door
+                    this.x = 0; 
                     this.y = Math.floor(Math.random() * (height / spacing)) * spacing;
                     this.speedX = Math.random() * 2 + 1;
                     this.speedY = 0;
                 }
-                this.length = Math.random() * 40 + 30; // Short Line length
+                this.length = Math.random() * 40 + 30; 
             }
             update() {
                 this.x += this.speedX;
                 this.y += this.speedY;
 
-                // Turn logic at maze junctions
                 if (Math.random() < 0.02) { 
                     if (this.speedX !== 0) {
                         this.speedY = Math.random() > 0.5 ? 2 : -2;
@@ -448,14 +444,13 @@
                     }
                 }
 
-                // Exit door check (if out of bounds, reset/exit)
                 if (this.x > width || this.x < 0 || this.y > height || this.y < 0) {
                     this.reset();
                 }
             }
             draw() {
                 ctx.beginPath();
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)'; // White glowing theme line
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)'; 
                 ctx.lineWidth = 1.5;
                 ctx.moveTo(this.x, this.y);
                 if (this.speedX > 0) ctx.lineTo(this.x - this.length, this.y);
@@ -466,8 +461,7 @@
             }
         }
 
-        // Create multiple motion line signals
-        const signalCount = width < 768 ? 15 : 35; // Less on mobile for optimization
+        const signalCount = width < 768 ? 15 : 35; 
         const signals = [];
         for(let i=0; i<signalCount; i++) {
             signals.push(new Signal());
@@ -475,13 +469,11 @@
 
         initMaze();
 
-        // Animation Loop
         function animate() {
             ctx.clearRect(0, 0, width, height);
 
-            // Draw Base Maze Structure
             ctx.beginPath();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)'; // Subtle grid/maze lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)'; 
             ctx.lineWidth = 1;
             for (let i = 0; i < lines.length; i++) {
                 ctx.moveTo(lines[i].x1, lines[i].y1);
@@ -489,7 +481,6 @@
             }
             ctx.stroke();
 
-            // Draw and Update Motion Signals (Enter & Exit loop)
             signals.forEach(signal => {
                 signal.update();
                 signal.draw();
@@ -501,5 +492,5 @@
         animate();
     </script>
 </body>
-    </html>
+                    </html>
     
