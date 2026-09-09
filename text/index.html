@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P2P Real-Time Text Transfer</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+
+    header {
+      background: #1e293b;
+      padding: 10px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid #334155;
+    }
+
+    .group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    label { font-size: 13px; color: #94a3b8; }
+
+    select, input, button {
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #475569;
+      outline: none;
+      background: #0f172a;
+      color: #f8fafc;
+    }
+
+    input[type="number"] { width: 55px; }
+    input[type="text"] { width: 110px; }
+
+    button {
+      cursor: pointer;
+      background: #2563eb;
+      border-color: #1d4ed8;
+      font-weight: 500;
+    }
+    button:hover { background: #1d4ed8; }
+    button.alt { background: #334155; border-color: #475569; }
+    button.alt:hover { background: #475569; }
+
+    #status-bar {
+      padding: 6px 16px;
+      font-size: 12px;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      justify-content: space-between;
+      color: #94a3b8;
+    }
+
+    .status-left { display: flex; align-items: center; gap: 8px; }
+    #dot { width: 8px; height: 8px; border-radius: 50%; background: #eab308; }
+
+    textarea {
+      flex: 1;
+      width: 100%;
+      border: none;
+      outline: none;
+      padding: 20px;
+      font-size: 15px;
+      line-height: 1.6;
+      font-family: Consolas, monospace;
+      resize: none;
+      background: #0f172a;
+      color: #f8fafc;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="group">
+      <label>Port:</label>
+      <select id="portSelect">
+        <option value="port-7001">7001 (Default)</option>
+        <option value="port-7002">7002</option>
+        <option value="port-7003">7003</option>
+        <option value="custom">Custom...</option>
+      </select>
+      <input type="text" id="customPort" placeholder="Custom ID" style="display: none;" />
+
+      <label style="margin-left: 6px;">Limit:</label>
+      <input type="number" id="userLimit" value="2" min="2" max="10" title="Max allowed users" />
+
+      <button id="connectBtn">Apply & Reconnect</button>
+    </div>
+
+    <div class="group">
+      <button id="copyBtn" class="alt">Copy</button>
+      <button id="cutBtn" class="alt">Cut</button>
+      <button id="pasteBtn" class="alt">Paste</button>
+      <button id="clearBtn" class="alt">Clear</button>
+    </div>
+  </header>
+
+  <div id="status-bar">
+    <div class="status-left">
+      <span id="dot"></span>
+      <span id="statusText">Connecting...</span>
+    </div>
+    <div id="statsText">0 chars | 0 words</div>
+  </div>
+
+  <textarea id="text" placeholder="Type or paste text..."></textarea>
+
+<script>
+  const SIGNALING_URL = "https://webrtc-signaling-server-6uvt.onrender.com";
+  let activePort = "port-7001";
+  let maxUsers = 2; // Total allowed users (including self)
+
+  const socket = io(SIGNALING_URL);
+  const textBox = document.getElementById("text");
+  const statusText = document.getElementById("statusText");
+  const statsText = document.getElementById("statsText");
+  const dot = document.getElementById("dot");
+  const portSelect = document.getElementById("portSelect");
+  const customPort = document.getElementById("customPort");
+  const userLimit = document.getElementById("userLimit");
+  const connectBtn = document.getElementById("connectBtn");
+
+  let myId = null;
+  const peers = {}; // Map of targetId -> { pc, channel }
+  let typingTimer = null;
+
+  function updateStatus(msg, color) {
+    const activeCount = Object.values(peers).filter(p => p.channel && p.channel.readyState === "open").length;
+    statusText.textContent = `[${activePort}] ${msg} | Active: ${activeCount + 1}/${maxUsers}`;
+    dot.style.background = color;
+  }
+
+  function updateStats() {
+    const val = textBox.value;
+    statsText.textContent = `${val.length} chars | ${val.trim() ? val.trim().split(/\s+/).length : 0} words`;
+  }
+
+  function broadcastText(text) {
+    Object.values(peers).forEach(({ channel }) => {
+      if (channel && channel.readyState === "open") {
+        channel.send(text);
+      }
+    });
+  }
+
+  function cleanupPeer(targetId) {
+    if (peers[targetId]) {
+      if (peers[targetId].channel) peers[targetId].channel.close();
+      if (peers[targetId].pc) peers[targetId].pc.close();
+      delete peers[targetId];
+    }
+    updateStatus("Peer left", "#eab308");
+  }
+
+  function createPeerConnection(targetId) {
+    if (peers[targetId]) return peers[targetId].pc;
+
+    const pc = new RTCPeerConnection({
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:global.stun.twilio.com:3478" }
+      ]
+    });
+
+    peers[targetId] = { pc, channel: null };
+
+    pc.onicecandidate = e => {
+      if (e.candidate) {
+        socket.emit("signal", {
+          room: activePort,
+          data: { type: "ice", candidate: e.candidate, from: myId, to: targetId }
+        });
+      }
+    };
+
+    pc.ondatachannel = e => {
+      peers[targetId].channel = e.channel;
+      setupChannel(e.channel, targetId);
+    };
+
+    pc.onconnectionstatechange = () => {
+      if (["disconnected", "failed", "closed"].includes(pc.connectionState)) {
+        cleanupPeer(targetId);
+      }
+    };
+
+    return pc;
+  }
+
+  function setupChannel(channel, targetId) {
+    channel.onopen = () => {
+      updateStatus("Peer Connected", "#10b981");
+      if (textBox.value) channel.send(textBox.value);
+    };
+
+    channel.onmessage = e => {
+      textBox.value = e.data;
+      updateStats();
+    };
+
+    channel.onclose = () => cleanupPeer(targetId);
+  }
+
+  async function initiateOffer(targetId) {
+    const pc = createPeerConnection(targetId);
+    const channel = pc.createDataChannel("text");
+    peers[targetId].channel = channel;
+    setupChannel(channel, targetId);
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    socket.emit("signal", {
+      room: activePort,
+      data: { type: "offer", offer: pc.localDescription, from: myId, to: targetId }
+    });
+  }
+
+  function joinPort() {
+    // Reset existing peers
+    Object.keys(peers).forEach(id => cleanupPeer(id));
+
+    updateStatus("Listening on port...", "#eab308");
+    socket.emit("join", activePort);
+    socket.emit("signal", {
+      room: activePort,
+      data: { type: "hello", from: myId }
+    });
+  }
+
+  // Socket Routing
+  socket.on("connect", () => {
+    myId = socket.id;
+    joinPort();
+  });
+
+  socket.on("signal", async data => {
+    if (!data || !data.from || data.from === myId) return;
+
+    // Reject message check
+    if (data.type === "room-full" && data.to === myId) {
+      updateStatus("Connection rejected: Room is Full!", "#ef4444");
+      return;
+    }
+
+    // Ignore signals intended for someone else
+    if (data.to && data.to !== myId) return;
+
+    // Handle Hello (Discovery)
+    if (data.type === "hello") {
+      const activeConnections = Object.keys(peers).length;
+
+      // Client-side Limit check
+      if (activeConnections >= (maxUsers - 1)) {
+        socket.emit("signal", {
+          room: activePort,
+          data: { type: "room-full", from: myId, to: data.from }
+        });
+        return;
+      }
+
+      // Tie-break initiator
+      if (myId < data.from) {
+        await initiateOffer(data.from);
+      }
+      return;
+    }
+
+    // Handle Offer
+    if (data.type === "offer") {
+      const activeConnections = Object.keys(peers).length;
+      if (activeConnections >= (maxUsers - 1)) {
+        socket.emit("signal", {
+          room: activePort,
+          data: { type: "room-full", from: myId, to: data.from }
+        });
+        return;
+      }
+
+      const pc = createPeerConnection(data.from);
+      await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+
+      socket.emit("signal", {
+        room: activePort,
+        data: { type: "answer", answer: pc.localDescription, from: myId, to: data.from }
+      });
+      return;
+    }
+
+    // Handle Answer
+    if (data.type === "answer" && peers[data.from]) {
+      await peers[data.from].pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+      return;
+    }
+
+    // Handle ICE
+    if (data.type === "ice" && peers[data.from]) {
+      try {
+        await peers[data.from].pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  });
+
+  // Text Input Handling
+  textBox.addEventListener("input", () => {
+    updateStats();
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(() => {
+      broadcastText(textBox.value);
+    }, 20);
+  });
+
+  // Dropdown Change
+  portSelect.addEventListener("change", () => {
+    customPort.style.display = portSelect.value === "custom" ? "inline-block" : "none";
+    if (portSelect.value === "custom") customPort.focus();
+  });
+
+  // Apply Settings Button
+  connectBtn.addEventListener("click", () => {
+    const target = portSelect.value === "custom" ? customPort.value.trim() : portSelect.value;
+    if (!target) return alert("Valid port required");
+
+    activePort = target;
+    maxUsers = parseInt(userLimit.value) || 2;
+    joinPort();
+  });
+
+  // Clipboard Actions
+  document.getElementById("copyBtn").addEventListener("click", () => navigator.clipboard.writeText(textBox.value));
+  document.getElementById("cutBtn").addEventListener("click", () => {
+    navigator.clipboard.writeText(textBox.value);
+    textBox.value = "";
+    updateStats();
+    broadcastText("");
+  });
+  document.getElementById("pasteBtn").addEventListener("click", async () => {
+    textBox.value += await navigator.clipboard.readText();
+    updateStats();
+    broadcastText(textBox.value);
+  });
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    textBox.value = "";
+    updateStats();
+    broadcastText("");
+  });
+</script>
+</body>
+</html>
