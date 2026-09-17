@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zero-Backend Live Sync</title>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; background: #0f172a; color: #e2e8f0; }
+    header { background: #1e293b; padding: 12px; display: flex; gap: 10px; align-items: center; }
+    input, button { padding: 8px 12px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #fff; }
+    button { cursor: pointer; background: #2563eb; }
+    #status { padding: 8px 12px; font-size: 13px; background: #334155; color: #38bdf8; }
+    textarea { flex: 1; padding: 16px; background: #0f172a; color: #f8fafc; font-size: 16px; border: none; outline: none; resize: none; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <span>My ID: <b id="myId">Generating...</b></span>
+    <input type="text" id="targetId" placeholder="Enter Peer ID to Connect">
+    <button id="connectBtn">Connect</button>
+  </header>
+
+  <div id="status">Connecting to network...</div>
+  <textarea id="text" placeholder="Type here... Live sync hoga"></textarea>
+
+  <script>
+    // Free global server - Koi URL host karne ki zaroorat nahi
+    const peer = new Peer(); 
+    let conn = null;
+
+    const myIdEl = document.getElementById("myId");
+    const statusEl = document.getElementById("status");
+    const textBox = document.getElementById("text");
+    const targetIdInput = document.getElementById("targetId");
+    const connectBtn = document.getElementById("connectBtn");
+
+    peer.on("open", id => {
+      myIdEl.textContent = id;
+      statusEl.textContent = "Ready. ID share karein ya kisi se connect karein.";
+    });
+
+    // Incoming Connection
+    peer.on("connection", c => {
+      conn = c;
+      setupConnection();
+    });
+
+    // Outgoing Connection
+    connectBtn.addEventListener("click", () => {
+      const target = targetIdInput.value.trim();
+      if (!target) return alert("Peer ID daalein");
+      conn = peer.connect(target);
+      setupConnection();
+    });
+
+    function setupConnection() {
+      statusEl.textContent = "Connecting...";
+      conn.on("open", () => {
+        statusEl.textContent = "Connected! Live sync active.";
+      });
+
+      conn.on("data", data => {
+        textBox.value = data;
+      });
+
+      conn.on("close", () => {
+        statusEl.textContent = "Disconnected.";
+      });
+    }
+
+    textBox.addEventListener("input", () => {
+      if (conn && conn.open) {
+        conn.send(textBox.value);
+      }
+    });
+  </script>
+</body>
+</html>
