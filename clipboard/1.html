@@ -162,7 +162,7 @@
     function bindChannel(channel) {
       dataChannel = channel;
       dataChannel.onopen = () => {
-        updateState("Live Connected (P2P Direct)", "#10b981");
+        updateState("Paired (Live Connected)", "#10b981");
         if (textBox.value) dataChannel.send(textBox.value);
       };
       dataChannel.onmessage = e => {
