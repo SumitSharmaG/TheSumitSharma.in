@@ -74,7 +74,7 @@
 
   <header>
     <div class="controls">
-      <input type="text" id="roomPin" value="7001" placeholder="PIN / Room Name" />
+      <input type="text" id="roomPin" value="8080" placeholder="Room-PIN" />
       <button id="connectBtn">Connect PIN</button>
     </div>
     <div class="controls">
@@ -91,7 +91,7 @@
     <div id="statsText">0 chars</div>
   </div>
 
-  <textarea id="text" placeholder="Dono device me same PIN daalein aur type karna start karein..."></textarea>
+  <textarea id="text" placeholder="Enter Same Pin to Connect Your Both Devices And live-Text-Transfer...Bommm :)"></textarea>
 
   <script>
     const myId = "usr_" + Math.random().toString(36).substring(2, 9);
@@ -116,7 +116,7 @@
     mqttClient = mqtt.connect("wss://broker.hivemq.com:8884/mqtt");
 
     mqttClient.on("connect", () => {
-      joinRoom(roomPin.value.trim() || "7001");
+      joinRoom(roomPin.value.trim() || "8080");
     });
 
     mqttClient.on("message", async (topic, payload) => {
@@ -211,6 +211,11 @@
       updateStats();
       if (dataChannel && dataChannel.readyState === "open") dataChannel.send("");
     });
+      // Page load  2 sec auto-click
+  window.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => connectBtn.click(), 2000);
+  });
+    
   </script>
 </body>
 </html>
