@@ -94,12 +94,12 @@
     <div class="group">
       <label>Port:</label>
       <select id="portSelect">
-        <option value="port-7001">7001 (Default)</option>
-        <option value="port-7002">7002</option>
-        <option value="port-7003">7003</option>
-        <option value="custom">Custom...</option>
+        <option value="port-2026">2026 (Default)</option>
+        <option value="port-143">143</option>
+        <option value="port-8080">8080</option>
+        <option value="custom">Custom Port...</option>
       </select>
-      <input type="text" id="customPort" placeholder="Custom ID" style="display: none;" />
+      <input type="text" id="customPort" placeholder="Custom Port" style="display: none;" />
 
       <label style="margin-left: 6px;">Limit:</label>
       <input type="number" id="userLimit" value="2" min="2" max="10" title="Max allowed users" />
@@ -126,7 +126,7 @@
   <textarea id="text" placeholder="Type or paste text..."></textarea>
 
 <script>
-  let activePort = "port-7001";
+  let activePort = "port-2026";
   let maxUsers = 2; // Total allowed users (including self)
   const myId = "peer_" + Math.random().toString(36).substring(2, 9);
 
@@ -366,7 +366,7 @@
   });
     // Page load- 2 second auto-click
   window.addEventListener("DOMContentLoaded", () => {
-    setTimeout(() => connectBtn.click(), 2000);
+    setTimeout(() => connectBtn.click(), 3000);
   });
                              
 </script>
