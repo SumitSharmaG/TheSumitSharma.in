@@ -364,6 +364,11 @@
     updateStats();
     broadcastText("");
   });
+    // Page load- 1 second auto-click
+  window.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => connectBtn.click(), 1000);
+  });
+                             
 </script>
 </body>
   </html>
