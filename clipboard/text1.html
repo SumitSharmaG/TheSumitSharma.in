@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instant Live Sync</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #0b0f19;
+      color: #e2e8f0;
+    }
+    header {
+      background: #151d30;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid #22304d;
+    }
+    .controls { display: flex; align-items: center; gap: 8px; }
+    input, button {
+      font-size: 13px;
+      padding: 7px 12px;
+      border-radius: 6px;
+      border: 1px solid #33456b;
+      outline: none;
+      background: #0b0f19;
+      color: #f8fafc;
+    }
+    input { width: 140px; text-align: center; letter-spacing: 1px; }
+    button {
+      cursor: pointer;
+      background: #2563eb;
+      font-weight: 500;
+      border: none;
+    }
+    button:hover { background: #1d4ed8; }
+    button.alt { background: #22304d; }
+    button.alt:hover { background: #33456b; }
+    #status-bar {
+      padding: 7px 16px;
+      font-size: 12px;
+      background: #0f172a;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #1e293b;
+    }
+    .status-badge { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+    #dot { width: 8px; height: 8px; border-radius: 50%; background: #eab308; transition: 0.3s; }
+    textarea {
+      flex: 1;
+      width: 100%;
+      border: none;
+      outline: none;
+      padding: 20px;
+      font-size: 16px;
+      line-height: 1.6;
+      font-family: Consolas, monospace;
+      resize: none;
+      background: #0b0f19;
+      color: #f8fafc;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="controls">
+      <input type="text" id="roomPin" value="7001" placeholder="PIN / Room Name" />
+      <button id="connectBtn">Connect PIN</button>
+    </div>
+    <div class="controls">
+      <button id="copyBtn" class="alt">Copy</button>
+      <button id="clearBtn" class="alt">Clear</button>
+    </div>
+  </header>
+
+  <div id="status-bar">
+    <div class="status-badge">
+      <span id="dot"></span>
+      <span id="statusText">Ready</span>
+    </div>
+    <div id="statsText">0 chars</div>
+  </div>
+
+  <textarea id="text" placeholder="Dono device me same PIN daalein aur type karna start karein..."></textarea>
+
+  <script>
+    const myId = "usr_" + Math.random().toString(36).substring(2, 9);
+    let mqttClient = null;
+    let dataChannel = null;
+    let pc = null;
+    let currentRoom = "";
+
+    const roomPin = document.getElementById("roomPin");
+    const connectBtn = document.getElementById("connectBtn");
+    const textBox = document.getElementById("text");
+    const statusText = document.getElementById("statusText");
+    const statsText = document.getElementById("statsText");
+    const dot = document.getElementById("dot");
+
+    function updateState(msg, color) {
+      statusText.textContent = msg;
+      dot.style.background = color;
+    }
+
+    // Public HiveMQ WSS broker: Zero setup, never sleeps, highly reliable
+    mqttClient = mqtt.connect("wss://broker.hivemq.com:8884/mqtt");
+
+    mqttClient.on("connect", () => {
+      joinRoom(roomPin.value.trim() || "7001");
+    });
+
+    mqttClient.on("message", async (topic, payload) => {
+      const msg = JSON.parse(payload.toString());
+      if (msg.from === myId) return;
+
+      if (msg.type === "hello") {
+        if (myId < msg.from) makeOffer(msg.from);
+      } 
+      else if (msg.type === "offer" && msg.to === myId) {
+        setupPeer(msg.from);
+        await pc.setRemoteDescription(new RTCSessionDescription(msg.offer));
+        const ans = await pc.createAnswer();
+        await pc.setLocalDescription(ans);
+        sendSignal({ type: "answer", answer: ans, to: msg.from });
+      } 
+      else if (msg.type === "answer" && msg.to === myId) {
+        await pc.setRemoteDescription(new RTCSessionDescription(msg.answer));
+      } 
+      else if (msg.type === "ice" && msg.to === myId && pc) {
+        try { await pc.addIceCandidate(new RTCIceCandidate(msg.candidate)); } catch (e) {}
+      }
+    });
+
+    function sendSignal(data) {
+      data.from = myId;
+      mqttClient.publish(`p2p-sync/${currentRoom}`, JSON.stringify(data));
+    }
+
+    function setupPeer(targetId) {
+      if (pc) pc.close();
+      pc = new RTCPeerConnection({
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+      });
+
+      pc.onicecandidate = e => {
+        if (e.candidate) sendSignal({ type: "ice", candidate: e.candidate, to: targetId });
+      };
+
+      pc.ondatachannel = e => bindChannel(e.channel);
+    }
+
+    function bindChannel(channel) {
+      dataChannel = channel;
+      dataChannel.onopen = () => {
+        updateState("Live Connected (P2P Direct)", "#10b981");
+        if (textBox.value) dataChannel.send(textBox.value);
+      };
+      dataChannel.onmessage = e => {
+        textBox.value = e.data;
+        updateStats();
+      };
+      dataChannel.onclose = () => updateState("Peer Disconnected", "#eab308");
+    }
+
+    async function makeOffer(targetId) {
+      setupPeer(targetId);
+      const dc = pc.createDataChannel("text");
+      bindChannel(dc);
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      sendSignal({ type: "offer", offer, to: targetId });
+    }
+
+    function joinRoom(pin) {
+      if (currentRoom) mqttClient.unsubscribe(`p2p-sync/${currentRoom}`);
+      currentRoom = pin;
+      updateState(`Connecting to PIN [${pin}]...`, "#eab308");
+      mqttClient.subscribe(`p2p-sync/${currentRoom}`);
+      sendSignal({ type: "hello" });
+    }
+
+    connectBtn.addEventListener("click", () => {
+      const pin = roomPin.value.trim();
+      if (pin) joinRoom(pin);
+    });
+
+    textBox.addEventListener("input", () => {
+      updateStats();
+      if (dataChannel && dataChannel.readyState === "open") {
+        dataChannel.send(textBox.value);
+      }
+    });
+
+    function updateStats() {
+      statsText.textContent = `${textBox.value.length} chars`;
+    }
+
+    document.getElementById("copyBtn").addEventListener("click", () => navigator.clipboard.writeText(textBox.value));
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      textBox.value = "";
+      updateStats();
+      if (dataChannel && dataChannel.readyState === "open") dataChannel.send("");
+    });
+  </script>
+</body>
+</html>
+
