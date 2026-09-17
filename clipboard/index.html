@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>P2P Real-Time Text Transfer</title>
+  <title>Real-Time Text Transfer</title>
   <!-- Serverless Public Signaling Library -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
@@ -364,9 +364,9 @@
     updateStats();
     broadcastText("");
   });
-    // Page load- 1 second auto-click
+    // Page load- 2 second auto-click
   window.addEventListener("DOMContentLoaded", () => {
-    setTimeout(() => connectBtn.click(), 1000);
+    setTimeout(() => connectBtn.click(), 2000);
   });
                              
 </script>
