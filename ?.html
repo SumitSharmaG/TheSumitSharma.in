@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Deluxe Narak — an ambient street radio</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anek+Devanagari:wght@700;800;900&family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            devanagari: ['"Anek Devanagari"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            cream: '#f8f4e9',
+            sand: '#e8dbca',
+            live: '#22c55e',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .narak-backdrop {
+      background-image: url('https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1920&auto=format&fit=crop');
+      background-size: cover;
+      background-position: center;
+    }
+
+    .saloon-vignette {
+      background: radial-gradient(circle at center, rgba(15, 7, 7, 0.2) 0%, rgba(10, 4, 4, 0.88) 100%);
+    }
+
+    .saloon-glass {
+      background: rgba(28, 16, 16, 0.78);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(248, 244, 233, 0.15);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+    }
+
+    .saloon-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: rgba(232, 219, 202, 0.9);
+      background: rgba(25, 12, 12, 0.5);
+      border: 1px solid rgba(248, 244, 233, 0.1);
+      backdrop-filter: blur(8px);
+    }
+
+    /* मोबाइल में ऑडियो प्लेबैक चालू रखने के लिए सेफ ऑफस्क्रीन रैपर */
+    #yt-screen {
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+      width: 200px;
+      height: 200px;
+      opacity: 0.01;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body class="bg-[#120808] text-cream min-h-screen flex flex-col justify-between select-none overflow-x-hidden font-sans">
+
+  <!-- Background Layer -->
+  <div class="fixed inset-0 pointer-events-none z-0">
+    <div class="absolute inset-0 narak-backdrop"></div>
+    <div class="absolute inset-0 saloon-vignette"></div>
+  </div>
+
+  <!-- Offscreen YouTube IFrame Container -->
+  <div id="yt-screen">
+    <div id="player"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="relative z-20 flex items-center justify-between px-5 pt-5 sm:px-8 sm:pt-6">
+    <span class="font-mono text-xs tracking-[0.25em] text-sand/60 uppercase">98.6 NARAK FM</span>
+
+    <div class="flex items-center gap-2 saloon-chip px-3 py-1.5">
+      <span class="relative flex size-2">
+        <span class="absolute inline-flex size-full animate-ping rounded-full bg-live opacity-75"></span>
+        <span class="relative inline-flex size-2 rounded-full bg-live"></span>
+      </span>
+      <span id="listener-count" class="font-semibold tabular-nums text-cream text-xs">31</span>
+      <span class="text-sand/70 text-xs">listening</span>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <a href="https://open.spotify.com" target="_blank" class="saloon-chip">
+        <svg class="size-3.5 text-[#1ED760]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.12-.899-.48-.12-.421.12-.78.479-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.362 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        <span class="hidden sm:inline">Spotify</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Center Title Section: "डीलक्स नरक" -->
+  <main class="relative z-10 flex flex-col items-center justify-center text-center px-4 my-auto py-12">
+    <h1 class="font-devanagari text-6xl sm:text-8xl lg:text-9xl font-black leading-[0.9] text-cream drop-shadow-[0_8px_30px_rgba(0,0,0,0.85)]">
+      <span class="block tracking-tight text-cream">डीलक्स</span>
+      <span class="block tracking-tight text-[#ff4c4c] drop-shadow-[0_0_25px_rgba(255,76,76,0.3)]">नरक</span>
+    </h1>
+    <p class="mt-4 font-mono text-[0.65rem] sm:text-xs tracking-[0.45em] text-sand/80 uppercase">
+      Deluxe Narak · open all hours
+    </p>
+  </main>
+
+  <!-- Bottom Player Container -->
+  <footer class="relative z-30 w-full max-w-xl mx-auto px-4 pb-8 sm:pb-12">
+    <div class="saloon-glass rounded-full p-2.5 sm:p-3 pr-4 sm:pr-6 flex items-center gap-3 sm:gap-4">
+      
+      <img id="track-art" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=120" alt="Cover" class="size-12 sm:size-14 rounded-full object-cover border border-white/20 shadow-md">
+
+      <div class="min-w-0 flex-1">
+        <p id="track-title" class="truncate text-sm sm:text-base font-semibold text-cream">
+          Deluxe Narak Radio
+        </p>
+        <p id="track-sub" class="truncate text-xs font-mono text-sand/60">
+          Tap play to start
+        </p>
+      </div>
+
+      <!-- Controls -->
+      <div class="flex items-center gap-2">
+        <button onclick="prevTrack()" class="p-2 text-sand hover:text-white transition-colors" aria-label="Previous">
+          <svg class="size-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+        </button>
+
+        <button id="play-btn" onclick="togglePlay()" class="size-11 sm:size-12 rounded-full bg-cream text-black flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all" aria-label="Play">
+          <svg id="play-svg" class="size-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="pause-svg" class="size-5 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+
+        <button onclick="nextTrack()" class="p-2 text-sand hover:text-white transition-colors" aria-label="Next">
+          <svg class="size-5" fill="currentColor" viewBox="0 0 24 24"><path d="m6 18 8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+        </button>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+  <script>
+    /* 
+      गानों की लिस्ट (Video ID और Title)
+      आप यहाँ अपनी पसंद के YouTube गानों की Video IDs आसानी से जोड़/बदल सकते हैं:
+    */
+    const songs = [
+      { id: 'N0jnLZxYwYc', title: 'Pehla Nasha (Retro Vibe)', artist: 'Udit Narayan' },
+      { id: 'jfKfPfyJRdk', title: 'Lofi Hip Hop - Chill Study', artist: 'Lofi Girl' },
+      { id: '4xDzrJKXOOY', title: 'Aankhon Mein Teri', artist: 'KK' },
+      { id: 'DWcJFNfaw9c', title: 'Midnight City Drive', artist: 'Chill Beats' }
+    ];
+
+    let currentIndex = 0;
+    let player = null;
+    let isPlaying = false;
+
+    // YouTube API Ready Hook
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('player', {
+        height: '200',
+        width: '200',
+        videoId: songs[currentIndex].id,
+        playerVars: {
+          autoplay: 0,
+          controls: 0,
+          playsinline: 1,
+          rel: 0
+        },
+        events: {
+          'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange,
+          'onError': onPlayerError
+        }
+      });
+    }
+
+    function onPlayerReady() {
+      updateUI();
+      document.getElementById('track-sub').innerText = "Radio ready · Tap play";
+    }
+
+    function updateUI() {
+      const song = songs[currentIndex];
+      document.getElementById('track-title').innerText = song.title;
+      document.getElementById('track-sub').innerText = song.artist;
+      document.getElementById('track-art').src = `https://i.ytimg.com/vi/${song.id}/hqdefault.jpg`;
+    }
+
+    function togglePlay() {
+      // मोबाइल क्रोम यूजर जेस्चर हैंडलर
+      if (!player || typeof player.playVideo !== 'function') {
+        // अगर API अभी तैयार नहीं हुई है, तो तुरंत मैनुअल लोड करें
+        loadSong(currentIndex);
+        return;
+      }
+
+      if (!isPlaying) {
+        player.playVideo();
+        isPlaying = true;
+        setPlayState(true);
+      } else {
+        player.pauseVideo();
+        isPlaying = false;
+        setPlayState(false);
+      }
+    }
+
+    function loadSong(index) {
+      currentIndex = index;
+      updateUI();
+      if (player && typeof player.loadVideoById === 'function') {
+        player.loadVideoById(songs[currentIndex].id);
+        isPlaying = true;
+        setPlayState(true);
+      }
+    }
+
+    function nextTrack() {
+      currentIndex = (currentIndex + 1) % songs.length;
+      loadSong(currentIndex);
+    }
+
+    function prevTrack() {
+      currentIndex = (currentIndex - 1 + songs.length) % songs.length;
+      loadSong(currentIndex);
+    }
+
+    function setPlayState(playing) {
+      const playSvg = document.getElementById('play-svg');
+      const pauseSvg = document.getElementById('pause-svg');
+      if (playing) {
+        playSvg.classList.add('hidden');
+        pauseSvg.classList.remove('hidden');
+        document.getElementById('track-sub').innerText = "Streaming now...";
+      } else {
+        playSvg.classList.remove('hidden');
+        pauseSvg.classList.add('hidden');
+        document.getElementById('track-sub').innerText = "Paused";
+      }
+    }
+
+    function onPlayerStateChange(event) {
+      if (event.data === YT.PlayerState.PLAYING) {
+        isPlaying = true;
+        setPlayState(true);
+      } else if (event.data === YT.PlayerState.PAUSED) {
+        isPlaying = false;
+        setPlayState(false);
+      } else if (event.data === YT.PlayerState.ENDED) {
+        // ऑटोमैटिक अगला गाना
+        nextTrack();
+      }
+    }
+
+    function onPlayerError() {
+      // अगर कोई गाना नहीं चल पा रहा तो अगला गाना शुरू कर दे
+      nextTrack();
+    }
+
+    // लिसनर काउंटर
+    let count = 29;
+    setInterval(() => {
+      count += Math.floor(Math.random() * 3) - 1;
+      count = Math.max(14, count);
+      document.getElementById('listener-count').innerText = count;
+    }, 4000);
+  </script>
+</body>
+</html>
