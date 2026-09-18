@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>Deluxe Narak — an ambient street radio</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -62,7 +63,6 @@
       backdrop-filter: blur(8px);
     }
 
-    /* मोबाइल में ऑडियो प्लेबैक चालू रखने के लिए सेफ ऑफस्क्रीन रैपर */
     #yt-screen {
       position: absolute;
       top: -9999px;
@@ -77,13 +77,26 @@
 
 <body class="bg-[#120808] text-cream min-h-screen flex flex-col justify-between select-none overflow-x-hidden font-sans">
 
+  <!-- ========================================================
+       FIRST-TOUCH SMART OVERLAY (ब्राउज़र ब्लॉक को हराने के लिए)
+       ======================================================== -->
+  <div id="start-overlay" onclick="startRadioExperience()" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md cursor-pointer transition-opacity duration-500">
+    <div class="saloon-glass p-6 rounded-3xl text-center max-w-xs border border-white/20 shadow-2xl animate-pulse">
+      <p class="font-devanagari text-2xl font-bold text-cream mb-1">डीलक्स नरक रेडियो</p>
+      <p class="text-xs font-mono text-sand/70 mb-4 uppercase tracking-widest">Ambient street sound</p>
+      <button class="bg-cream text-black px-6 py-2.5 rounded-full font-semibold text-xs tracking-wider uppercase shadow-lg hover:scale-105 active:scale-95 transition-all">
+        ▶ Tune In Now
+      </button>
+    </div>
+  </div>
+
   <!-- Background Layer -->
   <div class="fixed inset-0 pointer-events-none z-0">
     <div class="absolute inset-0 narak-backdrop"></div>
     <div class="absolute inset-0 saloon-vignette"></div>
   </div>
 
-  <!-- Offscreen YouTube IFrame Container -->
+  <!-- Hidden Player Container -->
   <div id="yt-screen">
     <div id="player"></div>
   </div>
@@ -97,7 +110,7 @@
         <span class="absolute inline-flex size-full animate-ping rounded-full bg-live opacity-75"></span>
         <span class="relative inline-flex size-2 rounded-full bg-live"></span>
       </span>
-      <span id="listener-count" class="font-semibold tabular-nums text-cream text-xs">31</span>
+      <span id="listener-count" class="font-semibold tabular-nums text-cream text-xs">34</span>
       <span class="text-sand/70 text-xs">listening</span>
     </div>
 
@@ -109,7 +122,7 @@
     </div>
   </header>
 
-  <!-- Center Title Section: "डीलक्स नरक" -->
+  <!-- Center Title Section -->
   <main class="relative z-10 flex flex-col items-center justify-center text-center px-4 my-auto py-12">
     <h1 class="font-devanagari text-6xl sm:text-8xl lg:text-9xl font-black leading-[0.9] text-cream drop-shadow-[0_8px_30px_rgba(0,0,0,0.85)]">
       <span class="block tracking-tight text-cream">डीलक्स</span>
@@ -124,14 +137,14 @@
   <footer class="relative z-30 w-full max-w-xl mx-auto px-4 pb-8 sm:pb-12">
     <div class="saloon-glass rounded-full p-2.5 sm:p-3 pr-4 sm:pr-6 flex items-center gap-3 sm:gap-4">
       
-      <img id="track-art" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=120" alt="Cover" class="size-12 sm:size-14 rounded-full object-cover border border-white/20 shadow-md">
+      <img id="track-art" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=120" alt="Cover" class="size-12 sm:size-14 rounded-full object-cover border border-white/20 shadow-md transition-all duration-300">
 
       <div class="min-w-0 flex-1">
         <p id="track-title" class="truncate text-sm sm:text-base font-semibold text-cream">
-          Deluxe Narak Radio
+          Tuning in...
         </p>
         <p id="track-sub" class="truncate text-xs font-mono text-sand/60">
-          Tap play to start
+          Radio Ready
         </p>
       </div>
 
@@ -158,10 +171,6 @@
   <script src="https://www.youtube.com/iframe_api"></script>
 
   <script>
-    /* 
-      गानों की लिस्ट (Video ID और Title)
-      आप यहाँ अपनी पसंद के YouTube गानों की Video IDs आसानी से जोड़/बदल सकते हैं:
-    */
     const songs = [
       { id: 'N0jnLZxYwYc', title: 'Pehla Nasha (Retro Vibe)', artist: 'Udit Narayan' },
       { id: 'jfKfPfyJRdk', title: 'Lofi Hip Hop - Chill Study', artist: 'Lofi Girl' },
@@ -173,7 +182,6 @@
     let player = null;
     let isPlaying = false;
 
-    // YouTube API Ready Hook
     function onYouTubeIframeAPIReady() {
       player = new YT.Player('player', {
         height: '200',
@@ -183,7 +191,8 @@
           autoplay: 0,
           controls: 0,
           playsinline: 1,
-          rel: 0
+          rel: 0,
+          enablejsapi: 1
         },
         events: {
           'onReady': onPlayerReady,
@@ -195,7 +204,6 @@
 
     function onPlayerReady() {
       updateUI();
-      document.getElementById('track-sub').innerText = "Radio ready · Tap play";
     }
 
     function updateUI() {
@@ -205,22 +213,31 @@
       document.getElementById('track-art').src = `https://i.ytimg.com/vi/${song.id}/hqdefault.jpg`;
     }
 
-    function togglePlay() {
-      // मोबाइल क्रोम यूजर जेस्चर हैंडलर
-      if (!player || typeof player.playVideo !== 'function') {
-        // अगर API अभी तैयार नहीं हुई है, तो तुरंत मैनुअल लोड करें
-        loadSong(currentIndex);
-        return;
+    // यूजर जब पहली बार "Tune In" पर टैप करेगा
+    function startRadioExperience() {
+      const overlay = document.getElementById('start-overlay');
+      overlay.style.opacity = '0';
+      setTimeout(() => overlay.remove(), 500); // स्मूथ फेड-आउट
+
+      if (player && typeof player.playVideo === 'function') {
+        player.playVideo();
+      } else {
+        // अगर 1-2 सेकंड में API लोड हो ही रही हो तो रिट्राई करें
+        setTimeout(() => {
+          if (player && typeof player.playVideo === 'function') {
+            player.playVideo();
+          }
+        }, 1000);
       }
+    }
+
+    function togglePlay() {
+      if (!player || typeof player.playVideo !== 'function') return;
 
       if (!isPlaying) {
         player.playVideo();
-        isPlaying = true;
-        setPlayState(true);
       } else {
         player.pauseVideo();
-        isPlaying = false;
-        setPlayState(false);
       }
     }
 
@@ -229,8 +246,7 @@
       updateUI();
       if (player && typeof player.loadVideoById === 'function') {
         player.loadVideoById(songs[currentIndex].id);
-        isPlaying = true;
-        setPlayState(true);
+        player.playVideo();
       }
     }
 
@@ -245,12 +261,13 @@
     }
 
     function setPlayState(playing) {
+      isPlaying = playing;
       const playSvg = document.getElementById('play-svg');
       const pauseSvg = document.getElementById('pause-svg');
       if (playing) {
         playSvg.classList.add('hidden');
         pauseSvg.classList.remove('hidden');
-        document.getElementById('track-sub').innerText = "Streaming now...";
+        document.getElementById('track-sub').innerText = "Streaming live...";
       } else {
         playSvg.classList.remove('hidden');
         pauseSvg.classList.add('hidden');
@@ -260,29 +277,32 @@
 
     function onPlayerStateChange(event) {
       if (event.data === YT.PlayerState.PLAYING) {
-        isPlaying = true;
         setPlayState(true);
+        const data = player.getVideoData();
+        if (data && data.title) {
+          document.getElementById('track-title').innerText = data.title;
+        }
       } else if (event.data === YT.PlayerState.PAUSED) {
-        isPlaying = false;
         setPlayState(false);
       } else if (event.data === YT.PlayerState.ENDED) {
-        // ऑटोमैटिक अगला गाना
         nextTrack();
       }
     }
 
-    function onPlayerError() {
-      // अगर कोई गाना नहीं चल पा रहा तो अगला गाना शुरू कर दे
-      nextTrack();
+    // अगर कोई गाना ब्लॉक हो तो तुरंत अगला चलाएं
+    function onPlayerError(e) {
+      document.getElementById('track-sub').innerText = "Skipping unplayable track...";
+      setTimeout(nextTrack, 500);
     }
 
     // लिसनर काउंटर
-    let count = 29;
+    let count = 34;
     setInterval(() => {
       count += Math.floor(Math.random() * 3) - 1;
-      count = Math.max(14, count);
+      count = Math.max(15, count);
       document.getElementById('listener-count').innerText = count;
-    }, 4000);
+    }, 4500);
   </script>
 </body>
-</html>
+                                                                        </html>
+  
