@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coming Soon</title>
+    <style>
+        /* Reset & Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(-45deg, #0f172a, #1e1b4b, #311042, #000000);
+            background-size: 400% 400%;
+            animation: gradientBG 12s ease infinite;
+            color: #ffffff;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        /* Animated Background */
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Card Container */
+        .container {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 55px 35px;
+            max-width: 650px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Fade Up Entrance */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Top Badge */
+        .badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            color: #818cf8;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+        }
+
+        /* Main Heading */
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        p {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-bottom: 35px;
+            line-height: 1.6;
+        }
+
+        /* Subscription Form */
+        .notify-box {
+            display: flex;
+            gap: 10px;
+            max-width: 450px;
+            margin: 0 auto 15px auto;
+        }
+
+        .notify-box input {
+            flex: 1;
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.07);
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .notify-box input:focus {
+            border-color: #6366f1;
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .notify-box button {
+            padding: 15px 30px;
+            border-radius: 12px;
+            border: none;
+            background: #6366f1;
+            color: #fff;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .notify-box button:hover {
+            background: #4f46e5;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Official Admin Signature Tag */
+        .admin-tag {
+            text-align: right;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #38bdf8;
+            letter-spacing: 1px;
+            margin-top: 20px;
+            opacity: 0.85;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+        }
+
+        .admin-tag::before {
+            content: "@";
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.2);
+            color: #38bdf8;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            text-align: center;
+            line-height: 18px;
+            font-size: 0.75rem;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 600px) {
+            .container {
+                padding: 40px 20px 30px 20px;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            p {
+                font-size: 0.95rem;
+            }
+
+            .notify-box {
+                flex-direction: column;
+            }
+
+            .notify-box button {
+                width: 100%;
+            }
+
+            .admin-tag {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <span class="badge">Under Construction</span>
+        <h1>We're Uploading Soon</h1>
+        <p>Work on the website is currently in progress. Register your email to receive launch updates.</p>
+        
+        <form class="notify-box" onsubmit="event.preventDefault(); alert('Shukriya! Hum aapko jald notify karenge.');">
+            <input type="email" placeholder="Enter your email" required>
+            <button type="submit">Notify Me</button>
+        </form>
+
+        <div class="admin-tag">~ Admin ISMIT</div>
+    </div>
+
+</body>
+</html>
